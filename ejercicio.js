@@ -1,3 +1,4 @@
+
 // image es la imagen con los datos
 // x e y son las coordenadas del pixel
 // channel indica que canal de color queremos, 0=rojo 1=verde 2=azul 3=alpha
@@ -18,13 +19,10 @@ const getPixel = (image, x, y) => [
   getPixelChannelColor(image, x, y, 3)
 ];
 
-// La imagen que tienen que modificar viene en el parámetro image y contiene inicialmente los datos originales
-// es objeto del tipo ImageData ( más info acá https://mzl.la/3rETTC6  )
-// Factor indica la cantidad de intensidades permitidas (sin contar el 0)
-
 function find_closest_palette_color(color, factor) {
-    let interval = 256 / factor;
+    const interval = 256 / factor;
     let closer_color = 0;
+    // Como el rango de valores de los colores es entre 0 y 255, el error maximo es 255
     let error_color = 255;
     for(let i = 0; i <= factor;i++) {
         
@@ -94,23 +92,28 @@ function jarvis_judice_kernel(image, x, y, c, quant_error){
 
 // El kernel utilizado en el algoritmo de dithering de Floyd y Steinberg
 function floyd_steinberg_kernel(image, x, y, c, quant_error){
+    const divisor = 16;
     // Si hay un elemento siguiente en la fila
     if (x + 1 < image.width) {
-        setPixelChannelColor(image, x+1, y, Math.round(getPixelChannelColor(image, x+1, y, c) + quant_error * 7/16), c);
+        setPixelChannelColor(image, x+1, y, Math.round(getPixelChannelColor(image, x+1, y, c) + quant_error * 7/divisor), c);
     }
     // Si hay una fila abajo
     if (y + 1 < image.height) {
-        setPixelChannelColor(image, x, y+1, Math.round(getPixelChannelColor(image, x, y+1, c) + quant_error * 5/16), c);
+        setPixelChannelColor(image, x, y+1, Math.round(getPixelChannelColor(image, x, y+1, c) + quant_error * 5/divisor), c);
         // Si hay un elemento siguiente en la fila de abajo
         if (x + 1 < image.width) {
-            setPixelChannelColor(image, x+1, y+1, Math.round(getPixelChannelColor(image, x+1, y+1, c) + quant_error * 1/16), c);
+            setPixelChannelColor(image, x+1, y+1, Math.round(getPixelChannelColor(image, x+1, y+1, c) + quant_error * 1/divisor), c);
         }
         // Si hay un elemento anterior en la fila de abajo
         if (x - 1 >= 0 ) {
-            setPixelChannelColor(image, x-1, y+1, Math.round(getPixelChannelColor(image, x-1, y+1, c) + quant_error * 3/16), c);
+            setPixelChannelColor(image, x-1, y+1, Math.round(getPixelChannelColor(image, x-1, y+1, c) + quant_error * 3/divisor), c);
         }
     }
 }
+
+// La imagen que tienen que modificar viene en el parámetro image y contiene inicialmente los datos originales
+// es objeto del tipo ImageData ( más info acá https://mzl.la/3rETTC6  )
+// Factor indica la cantidad de intensidades permitidas (sin contar el 0)
 
 function dither(image, factor)
 {
@@ -138,8 +141,8 @@ function dither(image, factor)
                 const new_pixel = find_closest_palette_color(old_pixel, factor);
                 setPixelChannelColor(image, x, y, new_pixel, c);
                 quant_error = old_pixel - new_pixel;
-                jarvis_judice_kernel(image, x, y, c, quant_error);
-                // floyd_steinberg_kernel(image, x, y, c, quant_error);
+                // jarvis_judice_kernel(image, x, y, c, quant_error);
+                floyd_steinberg_kernel(image, x, y, c, quant_error);
             }
         }
     }
