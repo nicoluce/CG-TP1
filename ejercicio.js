@@ -19,6 +19,11 @@ const getPixel = (image, x, y) => [
   getPixelChannelColor(image, x, y, 3)
 ];
 
+// Limita un numero a un rango
+function clamp(number, min, max) {
+  return Math.max(min, Math.min(number, max));
+}
+
 function find_closest_palette_color(color, factor) {
     const interval = 256 / factor;
     let closer_color = 0;
@@ -26,7 +31,7 @@ function find_closest_palette_color(color, factor) {
     let error_color = 255;
     for(let i = 0; i <= factor;i++) {
         
-        const palette_color = Math.round(Math.min(i * interval, 255));
+        const palette_color = clamp((i*interval)-1, 0, 255);
         
         const error_palette_color = Math.abs(color - palette_color);
         if (error_palette_color < error_color) {
@@ -115,8 +120,13 @@ function floyd_steinberg_kernel(image, x, y, c, quant_error){
 // es objeto del tipo ImageData ( más info acá https://mzl.la/3rETTC6  )
 // Factor indica la cantidad de intensidades permitidas (sin contar el 0)
 
-function dither(image, factor)
+function dither(image, factor, mode)
 {
+    let kernel = floyd_steinberg_kernel;
+    if (mode == 1) {
+        kernel = jarvis_judice_kernel;
+    }
+    
     // completar
     
       /**
@@ -136,13 +146,12 @@ function dither(image, factor)
     
     for(let y = 0; y < image.height;y++) {
         for(let x = 0; x < image.width;x++) {
-            for(let c = 0; c < 4; c++) {
+            for(let c = 0; c < 3; c++) {
                 const old_pixel = getPixelChannelColor(image, x, y, c);
                 const new_pixel = find_closest_palette_color(old_pixel, factor);
                 setPixelChannelColor(image, x, y, new_pixel, c);
                 quant_error = old_pixel - new_pixel;
-                // jarvis_judice_kernel(image, x, y, c, quant_error);
-                floyd_steinberg_kernel(image, x, y, c, quant_error);
+                kernel(image, x, y, c, quant_error);
             }
         }
     }

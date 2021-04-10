@@ -1,3 +1,15 @@
+let mode = 0;
+
+function changeModeToFloyd() {
+    mode = 0;
+    recomputeImages()
+}
+
+function changeModeToJarvis() {
+    mode = 1;
+    recomputeImages()
+}
+
 // Cargamos una imagen
 function handleFiles(e) {
   // abrir el archivo
@@ -54,7 +66,7 @@ function recomputeImages() {
   );
 
   // filtrado
-  dither(ditherimg,levels)
+  dither(ditherimg,levels, mode)
 
   // mostramos el resultado despuás del filtrado
   canvasresult.width = canvasinput.width;
@@ -92,5 +104,13 @@ window.onload = function () {
   const inputlevels = document.getElementById("inputlevels");
   inputlevels.addEventListener("change", recomputeImages);
 
+  // asocio inputMode a la funcion changeModeToFloyd()
+  const inputFloyd = document.getElementById("inputFloyd");
+  inputFloyd.addEventListener("change", changeModeToFloyd);
+  
+  // asocio inputMode a la funcion changeModeToJarvis()
+  const inputJarvis = document.getElementById("inputJarvis");
+  inputJarvis.addEventListener("change", changeModeToJarvis);
+  
   console.log("> HTML listo!");
 };
