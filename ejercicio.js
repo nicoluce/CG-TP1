@@ -25,7 +25,7 @@ function clamp(number, min, max) {
 }
 
 function find_closest_palette_color(color, factor) {
-    const interval = 256 / factor;
+    const interval = Math.trunc(256 / factor);
     let closer_color = 0;
     // Como el rango de valores de los colores es entre 0 y 255, el error maximo es 255
     let error_color = 255;
