@@ -42,17 +42,19 @@ function find_closest_palette_color(color, factor) {
     return closer_color;
 }
 
+const get_dither_function = (image, c) => (x, y, q) => {
+    if (x >= 0 && x < image.width &&
+        y >= 0 && y < image.height) {
+        const old_color = getPixelChannelColor(image, x, y, c);
+        const new_color = Math.round(clamp(old_color + q, 0, 255));
+        setPixelChannelColor(image, x, y, new_color, c);
+    }
+}
+
 // El kernel utilizado en el algoritmo de dithering de Jarvis y Judice
 function jarvis_judice_kernel(image, x, y, c, quant_error){
     const divisor = 48;
-
-    const apply_dither = (x, y, q) => {
-        if (x >= 0 && x < image.width &&
-            y >= 0 && y < image.height) {
-            const value = Math.round(getPixelChannelColor(image, x, y, c) + q);
-            setPixelChannelColor(image, x, y, value, c);
-        }
-    }
+    const apply_dither = get_dither_function(image, c);
 
     // Si hay un elemento siguiente en la fila
     apply_dither(x + 1, y, quant_error * 7/divisor);
@@ -72,14 +74,8 @@ function jarvis_judice_kernel(image, x, y, c, quant_error){
 // El kernel utilizado en el algoritmo de dithering de Floyd y Steinberg
 function floyd_steinberg_kernel(image, x, y, c, quant_error){
     const divisor = 16;
+    const apply_dither = get_dither_function(image, c);
 
-    const apply_dither = (x, y, q) => {
-        if (x >= 0 && x < image.width &&
-            y >= 0 && y < image.height) {
-            const value = Math.round(getPixelChannelColor(image, x, y, c) + q);
-            setPixelChannelColor(image, x, y, value, c);
-        }
-    }
     // Si hay un elemento siguiente en la fila
     apply_dither(x+1, y, quant_error * 7/divisor);
     // Si hay una fila abajo
