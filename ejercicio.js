@@ -45,75 +45,47 @@ function find_closest_palette_color(color, factor) {
 // El kernel utilizado en el algoritmo de dithering de Jarvis y Judice
 function jarvis_judice_kernel(image, x, y, c, quant_error){
     const divisor = 48;
+
+    const apply_dither = (x, y, q) => {
+        if (x >= 0 && x < image.width &&
+            y >= 0 && y < image.height) {
+            const value = Math.round(getPixelChannelColor(image, x, y, c) + q);
+            setPixelChannelColor(image, x, y, value, c);
+        }
+    }
+
     // Si hay un elemento siguiente en la fila
-    if (x + 1 < image.width) {
-        setPixelChannelColor(image, x+1, y, Math.round(getPixelChannelColor(image, x+1, y, c) + quant_error * 7/divisor), c);
-    }
+    apply_dither(x + 1, y, quant_error * 7/divisor);
+
     // Si hay otro elemento siguiente en la fila
-    if (x + 2 < image.width) {
-        setPixelChannelColor(image, x+2, y, Math.round(getPixelChannelColor(image, x+2, y, c) + quant_error * 5/divisor), c);
-    }
-    // Si hay una fila abajo
-    if (y + 1 < image.height) {
-        setPixelChannelColor(image, x, y+1, Math.round(getPixelChannelColor(image, x, y+1, c) + quant_error * 7/divisor), c);
-        // Si hay un elemento siguiente en la fila de abajo
-        if (x + 1 < image.width) {
-            setPixelChannelColor(image, x+1, y+1, Math.round(getPixelChannelColor(image, x+1, y+1, c) + quant_error * 5/divisor), c);
-        }
-            // Si hay otro elemento siguiente en la fila
-        if (x + 2 < image.width) {
-            setPixelChannelColor(image, x+2, y+1, Math.round(getPixelChannelColor(image, x+2, y+1, c) + quant_error * 3/divisor), c);
-        }
-        // Si hay un elemento anterior en la fila de abajo
-        if (x - 1 >= 0 ) {
-            setPixelChannelColor(image, x-1, y+1, Math.round(getPixelChannelColor(image, x-1, y+1, c) + quant_error * 5/divisor), c);
-        }
-        // Si hay otro elemento anterior en la fila de abajo
-        if (x - 2 >= 0 ) {
-            setPixelChannelColor(image, x-2, y+1, Math.round(getPixelChannelColor(image, x-2, y+1, c) + quant_error * 3/divisor), c);
-        }
-    }
-    // Si hay otra fila abajo
-    if (y + 2 < image.height) {
-        setPixelChannelColor(image, x, y+2, Math.round(getPixelChannelColor(image, x, y+2, c) + quant_error * 5/divisor), c);
-        // Si hay un elemento siguiente en la fila de abajo
-        if (x + 1 < image.width) {
-            setPixelChannelColor(image, x+1, y+2, Math.round(getPixelChannelColor(image, x+1, y+2, c) + quant_error * 3/divisor), c);
-        }
-            // Si hay otro elemento siguiente en la fila
-        if (x + 2 < image.width) {
-            setPixelChannelColor(image, x+2, y+2, Math.round(getPixelChannelColor(image, x+2, y+2, c) + quant_error * 1/divisor), c);
-        }
-        // Si hay un elemento anterior en la fila de abajo
-        if (x - 1 >= 0 ) {
-            setPixelChannelColor(image, x-1, y+2, Math.round(getPixelChannelColor(image, x-1, y+2, c) + quant_error * 3/divisor), c);
-        }
-        // Si hay otro elemento anterior en la fila de abajo
-        if (x - 2 >= 0 ) {
-            setPixelChannelColor(image, x-2, y+2, Math.round(getPixelChannelColor(image, x-2, y+2, c) + quant_error * 1/divisor), c);
-        }
-    }
+    apply_dither(x + 2, y, quant_error * 5/divisor);
+
+    [[-2, 3], [-1, 5], [0, 7], [1, 5], [2, 3]].forEach(([n, q]) => {
+        apply_dither(x - n, y + 1, quant_error * q/divisor);
+    });
+
+    [[-2, 1], [-1, 3], [0, 5], [1, 3], [2, 1]].forEach(([n, q]) => {
+        apply_dither(x - n, y + 2, quant_error * q/divisor);
+    });
 }
 
 // El kernel utilizado en el algoritmo de dithering de Floyd y Steinberg
 function floyd_steinberg_kernel(image, x, y, c, quant_error){
     const divisor = 16;
+
+    const apply_dither = (x, y, q) => {
+        if (x >= 0 && x < image.width &&
+            y >= 0 && y < image.height) {
+            const value = Math.round(getPixelChannelColor(image, x, y, c) + q);
+            setPixelChannelColor(image, x, y, value, c);
+        }
+    }
     // Si hay un elemento siguiente en la fila
-    if (x + 1 < image.width) {
-        setPixelChannelColor(image, x+1, y, Math.round(getPixelChannelColor(image, x+1, y, c) + quant_error * 7/divisor), c);
-    }
+    apply_dither(x+1, y, quant_error * 7/divisor);
     // Si hay una fila abajo
-    if (y + 1 < image.height) {
-        setPixelChannelColor(image, x, y+1, Math.round(getPixelChannelColor(image, x, y+1, c) + quant_error * 5/divisor), c);
-        // Si hay un elemento siguiente en la fila de abajo
-        if (x + 1 < image.width) {
-            setPixelChannelColor(image, x+1, y+1, Math.round(getPixelChannelColor(image, x+1, y+1, c) + quant_error * 1/divisor), c);
-        }
-        // Si hay un elemento anterior en la fila de abajo
-        if (x - 1 >= 0 ) {
-            setPixelChannelColor(image, x-1, y+1, Math.round(getPixelChannelColor(image, x-1, y+1, c) + quant_error * 3/divisor), c);
-        }
-    }
+    [[-1, 3], [0, 5], [1, 1]].forEach(([n, q]) => {
+        apply_dither(x - n, y + 1, quant_error * q/divisor);
+    });
 }
 
 // La imagen que tienen que modificar viene en el parámetro image y contiene inicialmente los datos originales
@@ -126,9 +98,7 @@ function dither(image, factor, mode)
     if (mode == 1) {
         kernel = jarvis_judice_kernel;
     }
-    
-    // completar
-    
+
       /**
      * Pseudo code
      * 
